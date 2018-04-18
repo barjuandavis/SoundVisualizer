@@ -6,10 +6,22 @@
 #include <float.h>
 #include <string.h>
 
+// GLEW
+#define GLEW_STATIC
+#include <GL/glew.h>
+
+//GLM
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 // for render + audio
 #include <SDL2/SDL.h>
+//#include <SDL2/SDL_opengl.h>
 #include <fftw3.h>
 #include "AudioData.h"
+#include "LoadShaders.h"
+extern GLuint LoadShaders(ShaderInfo *shaderinfo);
 
 // nuklear (for GUI)
 #define NK_INCLUDE_FIXED_TYPES
@@ -28,8 +40,133 @@
 #define REAL 0
 #define IMAG 1
 
-int currFreq;
+void init();
+void display();
+void clean();
+void reshape(int width, int height);
 
+int currFreq;
+float aspect;
+GLuint render_prog;
+GLuint vao;
+GLuint vbo;
+GLuint ebo;
+
+GLint render_model_matrix_loc;
+GLint render_projection_matrix_loc;
+std::vector<double>* fftResult;
+
+void init() {
+    ShaderInfo shader_info[] = {
+        { GL_VERTEX_SHADER, "primitive_restart.vs.glsl" },
+        { GL_FRAGMENT_SHADER, "primitive_restart.fs.glsl" },
+        { GL_NONE, NULL }
+    };
+
+    render_prog = LoadShaders(shader_info);
+    glUseProgram(render_prog);
+
+    render_model_matrix_loc = glGetUniformLocation(render_prog, "model_matrix");
+    render_projection_matrix_loc = glGetUniformLocation(render_prog, "projection_matrix");
+
+    // A single triangle
+    static const GLfloat vertex_positions[] = {
+        -1.0f, -1.0f,  0.0f, 1.0f,
+        1.0f, -1.0f,  0.0f, 1.0f,
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 1.0f,
+    };
+
+    // Color for each vertex
+    static const GLfloat vertex_colors[] = {
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 1.0f, 1.0f
+    };
+
+    // Indices for the triangle strips
+    static const GLushort vertex_indices[] = {
+        0, 1, 2
+    };
+
+    // Set up the element array buffer
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vertex_indices), vertex_indices, GL_STATIC_DRAW);
+
+    // Set up the vertex attributes
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_positions) + sizeof(vertex_colors), NULL, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_positions), vertex_positions);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertex_positions), sizeof(vertex_colors), vertex_colors);
+
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)sizeof(vertex_positions));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+}
+
+void display() {
+
+    glm::mat4 model_matrix;
+
+    // Setup
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Activate simple shading program
+    glUseProgram(render_prog);
+
+    // Set up the model and projection matrix
+    glm::mat4 projection_matrix(glm::frustum(-1.0f, 1.0f, -aspect, aspect, 1.0f, 500.0f));
+    glUniformMatrix4fv(render_projection_matrix_loc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+
+    // Set up for a glDrawElements call
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+    // Draw Arrays...
+    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(-3.0f, 0.0f, -5.0f));
+    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // DrawElements
+    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(-1.0f, 0.0f, -5.0f));
+    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, NULL);
+
+    // DrawElementsBaseVertex
+    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(1.0f, 0.0f, -5.0f));
+    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+    glDrawElementsBaseVertex(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, NULL, 1);
+
+    // DrawArraysInstanced
+    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(3.0f, 0.0f, -5.0f));
+    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 1);
+}
+
+void clean() {
+    glUseProgram(0);
+    glDeleteProgram(render_prog);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+}
+
+void reshape(int width, int height) {
+    glViewport(0, 0, width, height);
+    aspect = float(height) / float(width);
+}
 
 void visualize(std::vector<double>* vis, int freq) {
     int bucket = 6;
@@ -37,7 +174,7 @@ void visualize(std::vector<double>* vis, int freq) {
     //printf("%f",nyquist);
 
     double freq_bin[] = {19.0, 140.0, 400.0, 2600.0, 5200.0, nyquist};
-    double peakMaxArray[bucket]{DBL_MIN};
+    double peakMaxArray[bucket] {DBL_MIN};
     double peakMax = DBL_MIN;
     int peakMaxIndex = 0;
 
@@ -52,8 +189,8 @@ void visualize(std::vector<double>* vis, int freq) {
         }
 
         if (vis->at(i) > peakMax) {
-                peakMax = vis->at(i);
-                peakMaxIndex = i;
+            peakMax = vis->at(i);
+            peakMaxIndex = i;
         }
     }
 
@@ -69,7 +206,7 @@ void visualize(std::vector<double>* vis, int freq) {
 
 
 
-  printf("\n");
+    printf("\n");
 
 }
 
@@ -100,21 +237,22 @@ std::vector<double>* calculateFFT(short signal[], double sampleLength) {
 
     for (int i=1; i<(FFT_Points/2); ++i) {
 
-            absSignal->at(i) = sqrt(pow(out[i][REAL],2.0)+pow(out[i][IMAG],2.0));
-         //   printf("%d %f\n",i,absSignal->at(i));
-            if (absSignal->at(i) > maxFFTSample) {
-                    maxFFTSample = absSignal->at(i);
-                    peakPosition = i;
-            }
+        absSignal->at(i) = sqrt(pow(out[i][REAL],2.0)+pow(out[i][IMAG],2.0));
+        //   printf("%d %f\n",i,absSignal->at(i));
+        if (absSignal->at(i) > maxFFTSample) {
+            maxFFTSample = absSignal->at(i);
+            peakPosition = i;
+        }
     }
 
     return absSignal;
 }
 
 void audioCallback(void* userdata, Uint8* stream, int streamLength) {
-     AudioData* audio = (AudioData*)userdata;
+    AudioData* audio = (AudioData*)userdata;
 
-    if (audio->length == 0) return;
+    if (audio->length == 0)
+        return;
     Uint32 length = (Uint32) streamLength;
     length = (length > audio->length ? audio->length : length);
 
@@ -122,11 +260,10 @@ void audioCallback(void* userdata, Uint8* stream, int streamLength) {
 
     short signal[length];
 
-    for (int i=0; i<length; i++) signal[i] = (short) *(stream+i);
+    for (int i=0; i<length; i++)
+        signal[i] = (short) *(stream+i);
 
-    std::vector<double>* fftResult = calculateFFT(signal,(double)length); //calculateFFT is in this file :)
-
-    visualize(fftResult, audio->getFreq());
+    fftResult = calculateFFT(signal,(double)length); //calculateFFT is in this file :)
 
     audio->pos += length;
     audio->length -= length;
@@ -135,12 +272,90 @@ void audioCallback(void* userdata, Uint8* stream, int streamLength) {
 
 int main(int argc, char *argv[])  {
 
+    SDL_Window *mainwindow; /* Our window handle */
+    SDL_GLContext maincontext; /* Our opengl context handle */
+
     AudioData audio = AudioData(FILE_PATH);
+
+    /* Request opengl 4.4 context. */
+    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
+
+    /* Turn on double buffering with a 24bit Z buffer.
+    * You may need to change this to 16 or 32 for your system */
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    /* Create our window centered at 512x512 resolution */
+    mainwindow = SDL_CreateWindow("HAHAHA", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN |SDL_WINDOW_RESIZABLE);
+    if (!mainwindow) { /* Die if creation failed */
+        std::cout << "SDL Error: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return 1;
+    }
+
+    /* Create our opengl context and attach it to our window */
+    maincontext = SDL_GL_CreateContext(mainwindow);
+
+    GLenum rev;
+    glewExperimental = GL_TRUE;
+    rev = glewInit();
+
+    if (GLEW_OK != rev) {
+        std::cout << "Error: " << glewGetErrorString(rev) << std::endl;
+        exit(1);
+    } else {
+        std::cout << "GLEW Init: Success!" << std::endl;
+    }
+
+    SDL_GL_SetSwapInterval(1);
+
+    bool quit=false;
+
+    init();
+    reshape(512,512);
+
+    SDL_Event event;
     audio.wavSpec.callback = audioCallback;
     audio.wavSpec.userdata = &audio;
     audio.loadDevice();
-    audio.play();
+    audio.play(); //PLAY HARUS DIPAKE DILUAR CALLBACK OPENGL!!!
+
+    ///OPENGL CALLBACK
+    while(!quit) {
+
+        display();
+        SDL_GL_SwapWindow(mainwindow);
+
+        while( SDL_PollEvent( &event ) ) {
+            if( event.type == SDL_QUIT ) {
+                quit = true;
+            }
+            if(event.type ==SDL_WINDOWEVENT) {
+                if(event.window.event = SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    int w,h;
+                    SDL_GetWindowSize(mainwindow,&w,&h);
+                    reshape(w,h);
+                }
+            }
+        }
+    }
+
+    clean();
+
+    /* Delete our opengl context, destroy our window, and shutdown SDL */
     audio.~AudioData();
+    SDL_GL_DeleteContext(maincontext);
+    SDL_DestroyWindow(mainwindow);
+    SDL_Quit();
+
+
+
+
+
+
 
     return 0;
 }

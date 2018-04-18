@@ -5,7 +5,7 @@
 
 
 AudioData::AudioData(std::string file_path) {
-    if (SDL_Init( SDL_INIT_AUDIO ) < 0) {
+    if (SDL_Init( SDL_INIT_EVERYTHING ) < 0) {
        std::cout << "Error in SDL! " << SDL_GetError() << std::endl;
     } else {
         std::cout << "Initializing SDL2 done!\n";
@@ -35,7 +35,6 @@ AudioData::~AudioData() {
     fftw_cleanup();
     SDL_CloseAudioDevice(device);
     SDL_FreeWAV(pos);
-    SDL_Quit();
 }
 
 void AudioData::play() {
