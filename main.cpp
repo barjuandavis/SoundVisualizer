@@ -21,11 +21,8 @@
 #define NK_IMPLEMENTATION
 #define NK_GLFW_GL2_IMPLEMENTATION
 #include "nuklear/nuklear.h"
-<<<<<<< HEAD
-=======
 #include "nuklear/nuklear_glfw_gl2.h"
 
->>>>>>> f2f8ab68d8025c5d5b70e6cecc29d995971a9712
 #define FILE_PATH "test2.wav"
 #define REAL 0
 #define IMAG 1
