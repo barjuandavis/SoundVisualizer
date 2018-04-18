@@ -119,6 +119,16 @@
 		<Unit filename="SDL2/include/SDL2/close_code.h" />
 		<Unit filename="fftw/include/fftw3.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="nuklear/nkc_frontend/helpers/nkc_emscripten.h" />
+		<Unit filename="nuklear/nkc_frontend/helpers/nkc_file.h" />
+		<Unit filename="nuklear/nkc_frontend/helpers/nkc_font_stash.h" />
+		<Unit filename="nuklear/nkc_frontend/helpers/nkc_keyboard.h" />
+		<Unit filename="nuklear/nkc_frontend/helpers/nkc_stb_image.h" />
+		<Unit filename="nuklear/nkc_frontend/helpers/nkc_stbi_unused.h" />
+		<Unit filename="nuklear/nkc_frontend/nkc_gdip.h" />
+		<Unit filename="nuklear/nkc_frontend/nkc_glfw.h" />
+		<Unit filename="nuklear/nkc_frontend/nkc_sdl.h" />
+		<Unit filename="nuklear/nkc_frontend/nkc_xlib.h" />
 		<Unit filename="nuklear/nuklear.h" />
 		<Unit filename="nuklear/nuklear_glfw_gl2.h" />
 		<Unit filename="test.wav" />
