@@ -1,7 +1,8 @@
 # depslib dependency file v1.0
-1523091958 source:e:\codes\komgraf\soundvisualizer\main.cpp
+1524011792 source:e:\codes\komgraf\soundvisualizer\main.cpp
 	<iostream>
 	<SDL2/SDL.h>
+	<SDL2/SDL_opengl.h>
 	<fftw3.h>
 	<cmath>
 	<vector>
@@ -365,9 +366,11 @@
 
 1421179198 e:\codes\komgraf\soundvisualizer\sampleinfo.hpp
 
-1523092175 e:\codes\komgraf\soundvisualizer\include\audiodata.h
+1524011948 e:\codes\komgraf\soundvisualizer\include\audiodata.h
 	<SDL2/SDL.h>
 	<string>
+	<fftw3.h>
+	<SDL2/SDL_opengl.h>
 
 1523092579 source:e:\codes\komgraf\soundvisualizer\src\audiodata.cpp
 	"AudioData.h"
@@ -375,26 +378,19 @@
 	<iostream>
 	<fftw3.h>
 
-1524012936 source:e:\codes\komgraf\soundvisualizer_git\main.cpp
-	<iostream>
-	<SDL2/SDL.h>
-	<fftw3.h>
-	<cmath>
-	<vector>
-	<cstdio>
-	<float.h>
-	"AudioData.h"
-	"nuklear/nuklear.h"
+1519922305 e:\codes\komgraf\soundvisualizer\sdl2\include\sdl2\sdl_opengl.h
+	"SDL_config.h"
+	"gl_mangle.h"
+	<windows.h>
+	"SDL_opengl_glext.h"
 
-1524012936 e:\codes\komgraf\soundvisualizer_git\include\audiodata.h
-	<SDL2/SDL.h>
-	<string>
-
-1524012936 e:\codes\komgraf\soundvisualizer_git\nuklear\nuklear.h
-	<sal.h>
+1519922305 e:\codes\komgraf\soundvisualizer\sdl2\include\sdl2\sdl_opengl_glext.h
+	<windows.h>
+	<stddef.h>
+	<inttypes.h>
+	<inttypes.h>
+	<inttypes.h>
 	<stdint.h>
-	<stdlib.h>
-	<stdio.h>
-	<stdarg.h>
-	<assert.h>
+	<stdint.h>
+	<inttypes.h>
 
