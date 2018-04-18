@@ -10,6 +10,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 
+#define GL_CHECK_ERRORS assert(glGetError() == GL_NO_ERROR);
 //GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,9 +22,9 @@
 #include <fftw3.h>
 #include "AudioData.h"
 
-#include "LoadShaders.h"
-
-extern GLuint LoadShaders(ShaderInfo *shaderinfo);
+// Shader
+#include "GLSLShader.h"
+GLSLShader shader;
 
 // nuklear (for GUI)
 #define NK_INCLUDE_FIXED_TYPES
@@ -34,15 +35,9 @@ extern GLuint LoadShaders(ShaderInfo *shaderinfo);
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-<<<<<<< HEAD
-#define NK_GLFW_GL_IMPLEMENTATION
-#include "nuklear/nuklear.h"
-#include "nuklear/nuklear_glfw_gl3.h"
-=======
-#define NK_SDL_GL2_IMPLEMENTATION
+#define NK_SDL_GL3_IMPLEMENTATION
 #include "../nuklear/nuklear.h"
-#include "../nuklear/nuklear_sdl_gl2.h"
->>>>>>> 58e724a0b19d2b75ae18c76fb9d25ca1e74a3c81
+#include "../nuklear/nuklear_sdl_gl3.h"
 
 #define FILE_PATH "test.wav"
 #define REAL 0
@@ -56,119 +51,131 @@ void reshape(int width, int height);
 int currFreq;
 float aspect;
 GLuint render_prog;
-GLuint vao;
-GLuint vbo;
-GLuint ebo;
 
-GLint render_model_matrix_loc;
-GLint render_projection_matrix_loc;
+GLuint vaoID;
+GLuint vboVerticesID;
+GLuint vboIndicesID;
+
+// visual data
+const int NUM_X = 100;
+const int NUM_Z = 100;
+
+const float SIZE_X = 6;
+const float SIZE_Z = 6;
+const float HALF_SIZE_X = SIZE_X / 2.0f;
+const float HALF_SIZE_Z = SIZE_Z / 2.0f;
+
+const float SPEED = 2;
+
+glm::vec3 vertices[(NUM_X+1)*(NUM_Z+1)];
+const int TOTAL_INDICES = NUM_X*NUM_Z*2*3;
+GLushort indices[TOTAL_INDICES];
+
+glm::mat4 P = glm::mat4(1);
+glm::mat4 MV = glm::mat4(1);
+
+int state = 0, oldX = 0, oldY = 0;
+float rX = 25, rY = -40, dist = -7;
+
+float t = 0;
+
 std::vector<double>* fftResult;
 
 void init() {
-    ShaderInfo shader_info[] = {
-        { GL_VERTEX_SHADER, "primitive_restart.vs.glsl" },
-        { GL_FRAGMENT_SHADER, "primitive_restart.fs.glsl" },
-        { GL_NONE, NULL }
-    };
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    render_prog = LoadShaders(shader_info);
-    glUseProgram(render_prog);
+    shader.LoadFromFile(GL_VERTEX_SHADER, "shader.vert");
+    shader.LoadFromFile(GL_FRAGMENT_SHADER, "shader.frag");
 
-    render_model_matrix_loc = glGetUniformLocation(render_prog, "model_matrix");
-    render_projection_matrix_loc = glGetUniformLocation(render_prog, "projection_matrix");
+    shader.CreateAndLinkProgram();
 
-    // A single triangle
-    static const GLfloat vertex_positions[] = {
-        -1.0f, -1.0f,  0.0f, 1.0f,
-        1.0f, -1.0f,  0.0f, 1.0f,
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 1.0f,
-    };
+    shader.Use();
+        shader.AddAttribute("vVertex");
+        shader.AddUniform("MVP");
+        shader.AddUniform("t");
+    shader.UnUse();
+     GL_CHECK_ERRORS
 
-    // Color for each vertex
-    static const GLfloat vertex_colors[] = {
-        1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 1.0f, 1.0f
-    };
+    int count = 0;
+    int i = 0, j = 0;
 
-    // Indices for the triangle strips
-    static const GLushort vertex_indices[] = {
-        0, 1, 2
-    };
+    for (j = 0; j <= NUM_Z; j++) {
+        for (i = 0; i <= NUM_X; i++) {
+            vertices[count++] = glm::vec3 ( ((float(i)/(NUM_X-1)) *2-1) *HALF_SIZE_X, 0, ((float(j)/(NUM_Z-1)) *2-1) *HALF_SIZE_Z);
+        }
+    }
 
-    // Set up the element array buffer
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vertex_indices), vertex_indices, GL_STATIC_DRAW);
+    GLushort *id = &indices[0];
+    for (i = 0; i < NUM_Z; i++) {
+        for (j = 0; j < NUM_X; j++) {
+            int i0 = i * (NUM_X + 1) + j;
+            int i1 = i0 + 1;
+            int i2 = i0 + (NUM_X + 1);
+            int i3 = i2+1;
 
-    // Set up the vertex attributes
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+            if ( (j+i)%2) {
+                *id++ = i0; *id++ = i2; *id++ = i1;
+                *id++ = i1; *id++ = i2; *id++ = i3;
+            } else {
+                *id++ = i0; *id++ = i2; *id++ = i3;
+                *id++ = i0; *id++ = i3; *id++ = i1;
+            }
+        }
+    }
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_positions) + sizeof(vertex_colors), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_positions), vertex_positions);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertex_positions), sizeof(vertex_colors), vertex_colors);
+    glGenVertexArrays (1, &vaoID);
+    glGenBuffers (1, &vboVerticesID);
+    glGenBuffers (1, &vboIndicesID);
 
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)sizeof(vertex_positions));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
+    glBindVertexArray (vaoID);
 
-    glClearColor(0.5f, 0.7f, 0.5f, 1.0f);
+        glBindBuffer (GL_ARRAY_BUFFER, vboVerticesID);
+        glBufferData (GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
+        GL_CHECK_ERRORS
+
+        glEnableVertexAttribArray (shader["vVertex"]);
+        glVertexAttribPointer (shader["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
+        GL_CHECK_ERRORS
+
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, vboIndicesID);
+        glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
+        GL_CHECK_ERRORS
+
+    cout << "Initialization successful\n";
 
 }
 
 void display() {
+    t = SDL_GetTicks()/1000.0f * SPEED;
 
-    glm::mat4 model_matrix;
-
-    // Setup
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-
+    glShadeModel(GL_SMOOTH);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.2f, 0.2f, 0.2f, 1);
+    glClearDepth(1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 
-    // Activate simple shading program
-    glUseProgram(render_prog);
+    glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3 (0.0f, 0.0f, dist));
+    glm::mat4 Rx = glm::rotate (T, rX, glm::vec3 (1.0f, 0.0f, 0.0f));
+    glm::mat4 MV = glm::rotate (Rx, rY, glm::vec3 (0.0f, 1.0f, 0.0f));
+    glm::mat4 MVP = P*MV;
 
-    // Set up the model and projection matrix
-    glm::mat4 projection_matrix(glm::frustum(-1.0f, 1.0f, -aspect, aspect, 1.0f, 500.0f));
-    glUniformMatrix4fv(render_projection_matrix_loc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+    shader.Use();
+        glUniformMatrix4fv (shader ("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+        glUniform1f (shader("t"), t);
+            glBindVertexArray(vaoID);
+            glDrawArrays(GL_TRIANGLES, 0, TOTAL_INDICES);
+            GL_CHECK_ERRORS
 
-    // Set up for a glDrawElements call
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    shader.UnUse();
 
-    // Draw Arrays...
-    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(-3.0f, 0.0f, -5.0f));
-    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // DrawElements
-    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(-1.0f, 0.0f, -5.0f));
-    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, NULL);
-
-    // DrawElementsBaseVertex
-    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(1.0f, 0.0f, -5.0f));
-    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-    glDrawElementsBaseVertex(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, NULL, 1);
-
-    // DrawArraysInstanced
-    model_matrix = glm::translate(glm::mat4(1.0f),glm::vec3(3.0f, 0.0f, -5.0f));
-    glUniformMatrix4fv(render_model_matrix_loc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 1);
 }
 
 void clean() {
-    glUseProgram(0);
-    glDeleteProgram(render_prog);
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
+    shader.DeleteShaderProgram();
+    glDeleteVertexArrays(1, &vaoID);
+    glDeleteBuffers(1, &vboIndicesID);
+    glDeleteBuffers(1, &vboVerticesID);
 }
 
 void reshape(int width, int height) {
@@ -233,6 +240,8 @@ std::vector<double>* calculateFFT(short signal[], double sampleLength) {
         temp = (double) ((signal[2*i] & 0xFF) | (signal[2*i+1] << 8)) / sampleLength;
         complexSignal[i][REAL] = temp;
         complexSignal[i][IMAG] = 0.0f;
+
+
     }
 
     fftw_plan plan;
@@ -280,7 +289,11 @@ void audioCallback(void* userdata, Uint8* stream, int streamLength) {
 
 int main(int argc, char *argv[])  {
 
-    SDL_Window *mainwindow; /* Our window handle */
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0){
+        std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
+        return 1;
+    }
+
     SDL_GLContext maincontext; /* Our opengl context handle */
 
     AudioData audio = AudioData(FILE_PATH);
@@ -295,9 +308,11 @@ int main(int argc, char *argv[])  {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
+    SDL_Window *mainwindow; /* Our window handle */
     /* Create our window centered at 512x512 resolution */
     mainwindow = SDL_CreateWindow("HAHAHA", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                  512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN |SDL_WINDOW_RESIZABLE);
+                                  640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN |SDL_WINDOW_RESIZABLE);
+
     if (!mainwindow) { /* Die if creation failed */
         std::cout << "SDL Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -334,9 +349,6 @@ int main(int argc, char *argv[])  {
     ///OPENGL CALLBACK
     while(!quit && audio.length > 0) {
 
-        display();
-        SDL_GL_SwapWindow(mainwindow);
-
         while( SDL_PollEvent( &event ) ) {
             if( event.type == SDL_QUIT ) {
                 quit = true;
@@ -349,6 +361,9 @@ int main(int argc, char *argv[])  {
                 }
             }
         }
+
+        display();
+        SDL_GL_SwapWindow(mainwindow);
     }
 
     clean();
