@@ -375,3 +375,26 @@
 	<iostream>
 	<fftw3.h>
 
+1524012936 source:e:\codes\komgraf\soundvisualizer_git\main.cpp
+	<iostream>
+	<SDL2/SDL.h>
+	<fftw3.h>
+	<cmath>
+	<vector>
+	<cstdio>
+	<float.h>
+	"AudioData.h"
+	"nuklear/nuklear.h"
+
+1524012936 e:\codes\komgraf\soundvisualizer_git\include\audiodata.h
+	<SDL2/SDL.h>
+	<string>
+
+1524012936 e:\codes\komgraf\soundvisualizer_git\nuklear\nuklear.h
+	<sal.h>
+	<stdint.h>
+	<stdlib.h>
+	<stdio.h>
+	<stdarg.h>
+	<assert.h>
+

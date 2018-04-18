@@ -7,13 +7,11 @@
 #include <float.h>
 #include "AudioData.h"
 #include "nuklear/nuklear.h"
-
 #define FILE_PATH "test2.wav"
 #define REAL 0
 #define IMAG 1
 
 int currFreq;
-
 
 
 void visualize(std::vector<double>* vis, int freq) {
