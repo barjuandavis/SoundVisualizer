@@ -4,7 +4,32 @@
 	<ActiveTarget name="Debug" />
 	<File name="main.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="604" topLine="9" />
+			<Cursor1 position="899" topLine="18" />
+		</Cursor>
+	</File>
+	<File name="SDL2\include\SDL2\SDL.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1090" topLine="29" />
+		</Cursor>
+	</File>
+	<File name="src\AudioData.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="81" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="SDL2\include\SDL2\SDL_main.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="148" />
+		</Cursor>
+	</File>
+	<File name="nuklear\nuklear_sdl_gl3.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6511" topLine="186" />
+		</Cursor>
+	</File>
+	<File name="nuklear\nuklear_sdl_gl2.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2109" topLine="48" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>
