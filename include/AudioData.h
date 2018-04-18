@@ -16,9 +16,6 @@ class AudioData
         Uint8* pos;
         Uint32 length;
         SDL_AudioSpec wavSpec;
-
-    private:
-
         SDL_AudioDeviceID device;
 };
 

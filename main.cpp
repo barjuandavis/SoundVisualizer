@@ -32,11 +32,11 @@ extern GLuint LoadShaders(ShaderInfo *shaderinfo);
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-#define NK_GLFW_GL2_IMPLEMENTATION
+#define NK_GLFW_GL_IMPLEMENTATION
 #include "nuklear/nuklear.h"
-#include "nuklear/nuklear_glfw_gl2.h"
+#include "nuklear/nuklear_glfw_gl3.h"
 
-#define FILE_PATH "test2.wav"
+#define FILE_PATH "test.wav"
 #define REAL 0
 #define IMAG 1
 
@@ -110,7 +110,7 @@ void init() {
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.5f, 0.7f, 0.5f, 1.0f);
 
 }
 
@@ -321,10 +321,10 @@ int main(int argc, char *argv[])  {
     audio.wavSpec.callback = audioCallback;
     audio.wavSpec.userdata = &audio;
     audio.loadDevice();
-    audio.play(); //PLAY HARUS DIPAKE DILUAR CALLBACK OPENGL!!!
-
+     //PLAY HARUS DIPAKE DILUAR CALLBACK OPENGL!!!
+    SDL_PauseAudioDevice(audio.device, 0);
     ///OPENGL CALLBACK
-    while(!quit) {
+    while(!quit && audio.length > 0) {
 
         display();
         SDL_GL_SwapWindow(mainwindow);
@@ -344,17 +344,13 @@ int main(int argc, char *argv[])  {
     }
 
     clean();
+    SDL_Delay(100);
 
     /* Delete our opengl context, destroy our window, and shutdown SDL */
     audio.~AudioData();
     SDL_GL_DeleteContext(maincontext);
     SDL_DestroyWindow(mainwindow);
     SDL_Quit();
-
-
-
-
-
 
 
     return 0;
