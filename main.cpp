@@ -1,12 +1,31 @@
+// std library
 #include <iostream>
-#include <SDL2/SDL.h>
-#include <fftw3.h>
 #include <cmath>
 #include <vector>
 #include <cstdio>
 #include <float.h>
+
+// for render + audio
+#include <SDL2/SDL.h>
+#include <fftw3.h>
 #include "AudioData.h"
+
+// nuklear (for GUI)
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
+#define NK_GLFW_GL2_IMPLEMENTATION
 #include "nuklear/nuklear.h"
+<<<<<<< HEAD
+=======
+#include "nuklear/nuklear_glfw_gl2.h"
+
+>>>>>>> f2f8ab68d8025c5d5b70e6cecc29d995971a9712
 #define FILE_PATH "test2.wav"
 #define REAL 0
 #define IMAG 1
