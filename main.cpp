@@ -17,10 +17,12 @@
 
 // for render + audio
 #include <SDL2/SDL.h>
-//#include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include <fftw3.h>
 #include "AudioData.h"
+
 #include "LoadShaders.h"
+
 extern GLuint LoadShaders(ShaderInfo *shaderinfo);
 
 // nuklear (for GUI)
@@ -32,9 +34,9 @@ extern GLuint LoadShaders(ShaderInfo *shaderinfo);
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-#define NK_GLFW_GL2_IMPLEMENTATION
-#include "nuklear/nuklear.h"
-#include "nuklear/nuklear_glfw_gl2.h"
+#define NK_SDL_GL2_IMPLEMENTATION
+#include "../nuklear/nuklear.h"
+#include "../nuklear/nuklear_sdl_gl2.h"
 
 #define FILE_PATH "test2.wav"
 #define REAL 0
