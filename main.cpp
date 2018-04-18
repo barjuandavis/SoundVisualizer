@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdio>
 #include <float.h>
+#include <string.h>
 
 // for render + audio
 #include <SDL2/SDL.h>
