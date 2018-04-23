@@ -81,7 +81,7 @@ struct material
     float sb = 0.633f;
 } mat;
 
-#define DETAIL 50
+#define DETAIL 100
 #define NUM_VERTICES DETAIL*DETAIL
 #define PI 3.141592654f
 #define EPS 1e-9
@@ -225,11 +225,13 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     // build and compile our shader zprogram
     // ------------------------------------
     Shader lightingShader("1.materials.vs", "1.materials.fs");
-    Shader lightingShader1("1.materials1.vs", "1.materials1.fs");
+    Shader lightingShader1("1.materials1.vs", "1.materials.fs");
+    Shader lightingShader2("base.vs", "1.materials.fs");
     Shader lampShader("1.lamp.vs", "1.lamp.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
@@ -315,6 +317,24 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    createSuperellipsoid(1, 1, 1);
+    // first, configure the sphere's VAO (and VBO)
+    unsigned int sphere2VAO;
+    glGenVertexArrays(1, &sphere2VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(sphereVertices), sphereVertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(sphere2VAO);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
 
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D sphere)
     unsigned int lightVAO;
@@ -376,13 +396,14 @@ int main()
 
         // world transformation
         glm::mat4 model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.95f));
         lightingShader.setMat4("model", model);
 
         lightingShader.setFloat("t", t);
 
         // render the sphere
         glBindVertexArray(sphereVAO);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, NUM_VERTICES*8);
+        glDrawArrays(GL_POINTS, 0, NUM_VERTICES*8);
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader1.use();
@@ -407,13 +428,44 @@ int main()
         lightingShader1.setMat4("view", view);
 
         // world transformation
-        model = glm::mat4(1.0f);
-        lightingShader1.setMat4("model", model);
+        glm::mat4 model2 = glm::mat4(1.0f);
+        model2 = glm::scale(model2, glm::vec3(0.95f));
+        lightingShader1.setMat4("model", model2);
 
         lightingShader1.setFloat("t", t);
 
         // render the sphere
         glBindVertexArray(sphere1VAO);
+        glDrawArrays(GL_POINTS, 0, NUM_VERTICES*8);
+
+        // be sure to activate shader when setting uniforms/drawing objects
+        lightingShader2.use();
+        lightingShader2.setVec3("light.position", glm::vec3(sin(light)+lightPos.x, cos(light)+lightPos.y, sin(light)+lightPos.z));
+        lightingShader2.setVec3("viewPos", camera.Position);
+
+        // light properties
+        lightingShader2.setVec3("light.ambient", 1.0f, 1.0f, 1.0f); // note that all light colors are set at full intensity
+        lightingShader2.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+        lightingShader2.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+        // material properties
+        lightingShader2.setVec3("material.ambient", bg.r*mat.ar, bg.g*mat.ag, bg.b*mat.ab);
+        lightingShader2.setVec3("material.diffuse", bg.r*mat.dr, bg.g*mat.dg,bg.b*mat.db);
+        lightingShader2.setVec3("material.specular", bg.r*mat.sr, bg.g*mat.sg, bg.b*mat.sb);
+        lightingShader2.setFloat("material.shininess", 32.5f-specular);
+
+        // view/projection transformations
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        lightingShader2.setMat4("projection", projection);
+        lightingShader2.setMat4("view", view);
+
+        // world transformation
+        glm::mat4 base = glm::mat4(1.0f);
+        lightingShader2.setMat4("model", base);
+
+        // render the sphere
+        glBindVertexArray(sphere2VAO);
         glDrawArrays(GL_TRIANGLE_FAN, 0, NUM_VERTICES*8);
 
 
@@ -421,10 +473,10 @@ int main()
         lampShader.use();
         lampShader.setMat4("projection", projection);
         lampShader.setMat4("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(sin(light)+lightPos.x, cos(light)+lightPos.y, sin(light)+lightPos.z+cos(light)));
-        model = glm::scale(model, glm::vec3(0.2f)); // a smaller sphere
-        lampShader.setMat4("model", model);
+        glm::mat4 lamp = glm::mat4(1.0f);
+        lamp = glm::translate(lamp, glm::vec3(sin(light)+lightPos.x, cos(light)+lightPos.y, sin(light)+lightPos.z+cos(light)));
+        lamp = glm::scale(lamp, glm::vec3(0.2f)); // a smaller sphere
+        lampShader.setMat4("model", lamp);
 
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLE_FAN, 0, NUM_VERTICES*8);

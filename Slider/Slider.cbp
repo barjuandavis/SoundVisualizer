@@ -36,6 +36,8 @@
 		<Unit filename="1.lamp.vs" />
 		<Unit filename="1.materials.fs" />
 		<Unit filename="1.materials.vs" />
+		<Unit filename="1.materials1.fs" />
+		<Unit filename="1.materials1.vs" />
 		<Unit filename="Camera.h" />
 		<Unit filename="Shader.h" />
 		<Unit filename="main.cpp" />
