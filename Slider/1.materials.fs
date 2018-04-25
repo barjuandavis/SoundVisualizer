@@ -18,10 +18,15 @@ struct Light {
 
 in vec3 FragPos;
 in vec3 Normal;
+in vec3 Pos;
 
 uniform vec3 viewPos;
 uniform Material material;
 uniform Light light;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
@@ -41,5 +46,5 @@ void main()
     vec3 specular = light.specular * (spec * material.specular);
 
     vec3 result = ambient + diffuse + specular;
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(Pos*100.0f*result, 1.0);
 }

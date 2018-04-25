@@ -770,25 +770,31 @@
 	<GL/gl.h>
 	<stdio.h>
 
-1524028531 source:e:\codes\komgraf\soundvisualizer_git\main.cpp
+1524623203 source:e:\codes\komgraf\soundvisualizer_git\main.cpp
 	<iostream>
 	<cmath>
 	<vector>
 	<cstdio>
 	<float.h>
 	<string.h>
+	<stdlib.h>
+	<time.h>
 	<GL/glew.h>
-	<GL/freeglut.h>
+	<GLFW/glfw3.h>
 	<glm/glm.hpp>
 	<glm/gtc/matrix_transform.hpp>
 	<glm/gtc/type_ptr.hpp>
+	<GL/gl.h>
+	<GL/glut.h>
+	<GL/freeglut.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_opengl.h>
 	<fftw3.h>
 	"AudioData.h"
-	"GLSLShader.h"
-	"../nuklear/nuklear.h"
-	"../nuklear/nuklear_sdl_gl3.h"
+	"Slider/Shader.h"
+	"Slider/Camera.h"
+	"nuklear/nuklear.h"
+	"nuklear/nuklear_glfw_gl2.h"
 
 1524012935 e:\codes\komgraf\soundvisualizer_git\sdl2\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -1159,7 +1165,7 @@
 1524021031 e:\codes\komgraf\soundvisualizer_git\nuklear\nuklear_sdl_gl2.h
 	<SDL2/SDL.h>
 
-1524018837 source:e:\codes\komgraf\soundvisualizer_git\src\audiodata.cpp
+1524485980 source:e:\codes\komgraf\soundvisualizer_git\src\audiodata.cpp
 	"AudioData.h"
 	<string>
 	<iostream>
@@ -1179,4 +1185,29 @@
 	<SDL2/SDL.h>
 	<SDL2/SDL_opengl.h>
 	<string.h>
+
+1524476007 e:\codes\komgraf\soundvisualizer_git\slider\shader.h
+	<bits/stdc++.h>
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<glm/glm.hpp>
+	<glm/gtc/matrix_transform.hpp>
+	<glm/gtc/type_ptr.hpp>
+	<GL/gl.h>
+	<GL/glut.h>
+	<GL/freeglut.h>
+
+1524476007 e:\codes\komgraf\soundvisualizer_git\slider\camera.h
+	<bits/stdc++.h>
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<glm/glm.hpp>
+	<glm/gtc/matrix_transform.hpp>
+	<glm/gtc/type_ptr.hpp>
+	<GL/gl.h>
+	<GL/glut.h>
+	<GL/freeglut.h>
+
+1524012936 e:\codes\komgraf\soundvisualizer_git\nuklear\nuklear_glfw_gl2.h
+	<GLFW/glfw3.h>
 
