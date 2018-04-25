@@ -47,8 +47,8 @@
 			<Add directory="SDL2" />
 			<Add directory="fftw" />
 		</Compiler>
+		<Unit filename="GLSLShader.cpp" />
 		<Unit filename="LoadShaders.cpp" />
-		<Unit filename="LoadShaders.h" />
 		<Unit filename="SDL2/include/SDL2/SDL.h" />
 		<Unit filename="SDL2/include/SDL2/SDL_assert.h" />
 		<Unit filename="SDL2/include/SDL2/SDL_atomic.h" />
@@ -121,6 +121,16 @@
 		<Unit filename="SDL2/include/SDL2/SDL_vulkan.h" />
 		<Unit filename="SDL2/include/SDL2/begin_code.h" />
 		<Unit filename="SDL2/include/SDL2/close_code.h" />
+		<Unit filename="Slider/1.lamp.fs" />
+		<Unit filename="Slider/1.lamp.vs" />
+		<Unit filename="Slider/1.materials.fs" />
+		<Unit filename="Slider/1.materials.vs" />
+		<Unit filename="Slider/1.materials1.fs" />
+		<Unit filename="Slider/1.materials1.vs" />
+		<Unit filename="Slider/Camera.h" />
+		<Unit filename="Slider/Shader.h" />
+		<Unit filename="Slider/base.fs" />
+		<Unit filename="Slider/base.vs" />
 		<Unit filename="fftw/include/fftw3.h" />
 		<Unit filename="include/AudioData.h" />
 		<Unit filename="main.cpp" />
